@@ -133,7 +133,7 @@ export const useHabitStore = create<HabitStoreState>()(
       },
     }),
     {
-      name: 'routinery-habit-storage',
+      ame: 'routinery-habit-storage',
       storage: createJSONStorage(() => localStorage),
     }
   )
