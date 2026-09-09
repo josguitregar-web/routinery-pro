@@ -10,151 +10,7 @@ export const getTodayDateString = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-const DEFAULT_HABITS: Habit[] = [
-  // MAÑANA
-  {
-    id: 'habit-morning-1',
-    name: 'Vaso de agua con limón',
-    description: 'Hidratar el cuerpo al despertar',
-    icon: 'Droplets',
-    color: '#FF0000',
-    moment: 'morning',
-    frequency: { type: 'daily' },
-    targetCount: 1,
-    unit: 'vaso',
-    targetTime: '07:00',
-    reminderEnabled: true,
-    reminderTime: '07:00',
-    createdAt: new Date().toISOString(),
-    order: 1,
-    currentStreak: 4,
-    bestStreak: 7,
-    totalCompletions: 12,
-  },
-  {
-    id: 'habit-morning-2',
-    name: 'Meditación Glyph',
-    description: '10 minutos de respiración y enfoque',
-    icon: 'Brain',
-    color: '#FF0000',
-    moment: 'morning',
-    frequency: { type: 'daily' },
-    targetCount: 10,
-    unit: 'min',
-    targetTime: '07:30',
-    reminderEnabled: false,
-    createdAt: new Date().toISOString(),
-    order: 2,
-    currentStreak: 2,
-    bestStreak: 5,
-    totalCompletions: 8,
-  },
-  {
-    id: 'habit-morning-3',
-    name: 'Planificar prioridades',
-    description: 'Definir las 3 tareas clave del día',
-    icon: 'CheckSquare',
-    color: '#FFFFFF',
-    moment: 'morning',
-    frequency: { type: 'weekdays' },
-    targetCount: 3,
-    unit: 'tareas',
-    targetTime: '08:30',
-    reminderEnabled: true,
-    reminderTime: '08:30',
-    createdAt: new Date().toISOString(),
-    order: 3,
-    currentStreak: 5,
-    bestStreak: 14,
-    totalCompletions: 21,
-  },
-
-  // TARDE
-  {
-    id: 'habit-afternoon-1',
-    name: 'Caminata o pausa activa',
-    description: 'Pausa para estirar y resetear la vista',
-    icon: 'Footprints',
-    color: '#FF0000',
-    moment: 'afternoon',
-    frequency: { type: 'daily' },
-    targetCount: 20,
-    unit: 'min',
-    targetTime: '14:30',
-    reminderEnabled: true,
-    reminderTime: '14:30',
-    createdAt: new Date().toISOString(),
-    order: 4,
-    currentStreak: 3,
-    bestStreak: 6,
-    totalCompletions: 9,
-  },
-  {
-    id: 'habit-afternoon-2',
-    name: 'Sesión de lectura técnica',
-    description: 'Lectura o aprendizaje continuo',
-    icon: 'BookOpen',
-    color: '#FFFFFF',
-    moment: 'afternoon',
-    frequency: { type: 'daily' },
-    targetCount: 15,
-    unit: 'páginas',
-    targetTime: '17:00',
-    reminderEnabled: false,
-    createdAt: new Date().toISOString(),
-    order: 5,
-    currentStreak: 1,
-    bestStreak: 4,
-    totalCompletions: 5,
-  },
-
-  // NOCHE
-  {
-    id: 'habit-night-1',
-    name: 'Modo Glyph: Desconectar pantallas',
-    description: 'Dejar móvil y pantallas 45 min antes de dormir',
-    icon: 'Moon',
-    color: '#FF0000',
-    moment: 'night',
-    frequency: { type: 'daily' },
-    targetCount: 1,
-    unit: 'sesión',
-    targetTime: '22:30',
-    reminderEnabled: true,
-    reminderTime: '22:30',
-    createdAt: new Date().toISOString(),
-    order: 6,
-    currentStreak: 6,
-    bestStreak: 10,
-    totalCompletions: 16,
-  },
-  {
-    id: 'habit-night-2',
-    name: 'Bitácora y gratitud',
-    description: 'Anotar 1 logro y 1 agradecimiento',
-    icon: 'PenTool',
-    color: '#FFFFFF',
-    moment: 'night',
-    frequency: { type: 'daily' },
-    targetCount: 1,
-    unit: 'nota',
-    targetTime: '23:00',
-    reminderEnabled: false,
-    createdAt: new Date().toISOString(),
-    order: 7,
-    currentStreak: 0,
-    bestStreak: 8,
-    totalCompletions: 14,
-  },
-];
-
-export interface HabitStoreState {
-  habits: Habit[];
-  logs: HabitLogEntry[];
-  userName: string;
-  isHydrated: boolean;
-  isModalOpen: boolean;
-  editingHabit: Habit | null;
+export const DEFAULT_HABITS = [];
 
   // Actions
   openCreateModal: () => void;
@@ -275,12 +131,11 @@ export const useHabitStore = create<HabitStoreState>()(
       },
 
       resetToDefaults: () => {
-        set({
-          habits: DEFAULT_HABITS,
-          logs: [],
-          userName: 'NOTHING USER',
-        });
-      },
+  set({
+    logs: [],
+  });
+},
+
 
       isHabitCompleted: (habitId: string, date?: string) => {
         const targetDate = date || getTodayDateString();
