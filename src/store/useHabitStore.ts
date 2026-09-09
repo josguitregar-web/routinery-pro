@@ -42,7 +42,7 @@ export const useHabitStore = create<HabitStoreState>()(
     (set, get) => ({
       habits: DEFAULT_HABITS,
       logs: [],
-      userName: 'Alex',
+      userName: 'Your Name',
       isModalOpen: false,
       isEditModalOpen: false,
       editingHabit: null,
