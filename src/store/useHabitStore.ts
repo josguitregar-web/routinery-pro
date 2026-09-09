@@ -10,7 +10,6 @@ export const getTodayDateString = (): string => {
   return `${year}-${month}-${day}`;
 };
 
-```typescript
 export const DEFAULT_HABITS: Habit[] = [];
 
 export interface HabitStoreState {
@@ -22,7 +21,6 @@ export interface HabitStoreState {
   editingHabit: Habit | null;
 
   // Actions
-```
 
   openCreateModal: () => void;
   openEditModal: (habit: Habit) => void;
