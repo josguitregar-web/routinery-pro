@@ -38,83 +38,43 @@ export interface HabitStoreState {
 }
 
 export const useHabitStore = create<HabitStoreState>()(
-
   persist(
     (set, get) => ({
       habits: DEFAULT_HABITS,
       logs: [],
-      userName: 'NOTHING USER',
-      isHydrated: false,
+      userName: 'Alex',
       isModalOpen: false,
+      isEditModalOpen: false,
       editingHabit: null,
 
-      setHydrated: (val: boolean) => set({ isHydrated: val }),
+      openCreateModal: () => set({ isModalOpen: true }),
+      openEditModal: (habit) => set({ isEditModalOpen: true, editingHabit: habit }),
+      closeModal: () => set({ isModalOpen: false, isEditModalOpen: false, editingHabit: null }),
 
-      openCreateModal: () => set({ isModalOpen: true, editingHabit: null }),
-      openEditModal: (habit: Habit) => set({ isModalOpen: true, editingHabit: habit }),
-      closeModal: () => set({ isModalOpen: false, editingHabit: null }),
-
-      setUserName: (name: string) => set({ userName: name.trim() || 'USUARIO' }),
-
-      toggleHabit: (habitId: string, date?: string) => {
-        const targetDate = date || getTodayDateString();
-        const state = get();
-        const existingLogIndex = state.logs.findIndex(
-          (log) => log.habitId === habitId && log.date === targetDate
+      toggleHabit: (habitId, date = getTodayDateString()) => {
+        const { logs } = get();
+        const existingLogIndex = logs.findIndex(
+          (log) => log.habitId === habitId && log.completedAt === date
         );
 
-        let newLogs = [...state.logs];
-        const isNowCompleted = existingLogIndex === -1;
-
-        if (isNowCompleted) {
-          // Add completion entry
-          const newEntry: HabitLogEntry = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-            habitId,
-            date: targetDate,
-            completedAt: new Date().toISOString(),
-          };
-          newLogs.push(newEntry);
+        if (existingLogIndex >= 0) {
+          const newLogs = logs.filter((_, index) => index !== existingLogIndex);
+          set({ logs: newLogs });
         } else {
-          // Remove completion entry
-          newLogs.splice(existingLogIndex, 1);
-        }
-
-        // Update habit streak and statistics
-        const updatedHabits = state.habits.map((h) => {
-          if (h.id !== habitId) return h;
-
-          const newTotal = isNowCompleted
-            ? h.totalCompletions + 1
-            : Math.max(0, h.totalCompletions - 1);
-
-          const newStreak = isNowCompleted
-            ? h.currentStreak + 1
-            : Math.max(0, h.currentStreak - 1);
-
-          const newBestStreak = Math.max(h.bestStreak, newStreak);
-
-          return {
-            ...h,
-            totalCompletions: newTotal,
-            currentStreak: newStreak,
-            bestStreak: newBestStreak,
-            lastCompletedDate: isNowCompleted ? targetDate : h.lastCompletedDate,
-            lastCompletedAt: isNowCompleted ? new Date().toISOString() : h.lastCompletedAt,
+          const newLog: HabitLogEntry = {
+            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            habitId,
+            completedAt: date,
           };
-        });
-
-        set({
-          logs: newLogs,
-          habits: updatedHabits,
-        });
+          set({ logs: [...logs, newLog] });
+        }
       },
 
       addHabit: (habitData) => {
         const newHabit: Habit = {
           ...habitData,
-          id: `habit-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-          createdAt: new Date().toISOString(),
+          id: `habit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: getTodayDateString(),
           currentStreak: 0,
           bestStreak: 0,
           totalCompletions: 0,
@@ -122,68 +82,59 @@ export const useHabitStore = create<HabitStoreState>()(
 
         set((state) => ({
           habits: [...state.habits, newHabit],
+          isModalOpen: false,
         }));
       },
 
       updateHabit: (id, updates) => {
         set((state) => ({
-          habits: state.habits.map((h) => (h.id === id ? { ...h, ...updates } : h)),
+          habits: state.habits.map((habit) =>
+            habit.id === id ? { ...habit, ...updates } : habit
+          ),
+          isEditModalOpen: false,
+          editingHabit: null,
         }));
       },
 
       deleteHabit: (id) => {
         set((state) => ({
-          habits: state.habits.filter((h) => h.id !== id),
-          logs: state.logs.filter((l) => l.habitId !== id),
+          habits: state.habits.filter((habit) => habit.id !== id),
+          logs: state.logs.filter((log) => log.habitId !== id),
         }));
       },
 
+      setUserName: (userName) => set({ userName }),
+
       resetToDefaults: () => {
-  set({
-    logs: [],
-  });
-},
-
-
-      isHabitCompleted: (habitId: string, date?: string) => {
-        const targetDate = date || getTodayDateString();
-        return get().logs.some((l) => l.habitId === habitId && l.date === targetDate);
+        set({
+          logs: [],
+        });
       },
 
-      getProgressForDate: (date?: string) => {
-        const targetDate = date || getTodayDateString();
-        const activeHabits = get().habits.filter((h) => !h.archived);
-        const total = activeHabits.length;
-        if (total === 0) return { completed: 0, total: 0, percentage: 0 };
+      isHabitCompleted: (habitId, date = getTodayDateString()) => {
+        const { logs } = get();
+        return logs.some((log) => log.habitId === habitId && log.completedAt === date);
+      },
 
-        const completed = activeHabits.filter((h) =>
-          get().logs.some((l) => l.habitId === h.id && l.date === targetDate)
-        ).length;
-
+      getProgressForDate: (date = getTodayDateString()) => {
+        const { habits, isHabitCompleted } = get();
+        if (habits.length === 0) {
+          return { completed: 0, total: 0, percentage: 0 };
+        }
+        const completed = habits.filter((h) => isHabitCompleted(h.id, date)).length;
+        const total = habits.length;
         const percentage = Math.round((completed / total) * 100);
         return { completed, total, percentage };
       },
 
-      getHabitsByMoment: (moment: DayMoment) => {
-        return get()
-          .habits.filter((h) => !h.archived && h.moment === moment)
-          .sort((a, b) => a.order - b.order);
+      getHabitsByMoment: (moment) => {
+        const { habits } = get();
+        return habits.filter((h) => h.moment === moment);
       },
     }),
     {
-      name: 'routinery-pro-storage',
-      storage: createJSONStorage(() =>
-        typeof window !== 'undefined'
-          ? localStorage
-          : {
-              getItem: () => null,
-              setItem: () => {},
-              removeItem: () => {},
-            }
-      ),
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
-      },
+      name: 'routinery-habit-storage',
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );
