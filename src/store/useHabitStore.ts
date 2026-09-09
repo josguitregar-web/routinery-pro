@@ -21,7 +21,6 @@ export interface HabitStoreState {
   editingHabit: Habit | null;
 
   // Actions
-
   openCreateModal: () => void;
   openEditModal: (habit: Habit) => void;
   closeModal: () => void;
@@ -31,7 +30,6 @@ export interface HabitStoreState {
   deleteHabit: (id: string) => void;
   setUserName: (name: string) => void;
   resetToDefaults: () => void;
-  setHydrated: (val: boolean) => void;
 
   // Selectors & Computations
   isHabitCompleted: (habitId: string, date?: string) => boolean;
@@ -40,6 +38,7 @@ export interface HabitStoreState {
 }
 
 export const useHabitStore = create<HabitStoreState>()(
+
   persist(
     (set, get) => ({
       habits: DEFAULT_HABITS,
