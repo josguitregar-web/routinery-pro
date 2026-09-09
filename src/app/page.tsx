@@ -9,13 +9,14 @@ import {
   Pencil,
   Check,
   RotateCcw,
-  Sparkles,
-  Flame,
 } from 'lucide-react';
 import { useHabitStore, getTodayDateString } from '@/store/useHabitStore';
 import { DotMatrixProgress } from '@/components/DotMatrixProgress';
 import { HabitRow } from '@/components/HabitRow';
+import { Navbar } from '@/components/Navbar';
+import { CreateEditHabitModal } from '@/components/CreateEditHabitModal';
 import { DayMoment } from '@/types/habit';
+import { tapScale, snappySpring } from '@/lib/animations';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -160,11 +161,9 @@ export default function Home() {
   if (!mounted) {
     return (
       <main className="min-h-screen bg-black text-white px-4 py-12 flex flex-col items-center justify-center">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 font-mono text-xs text-[#888888]">
           <span className="glyph-led-red animate-pulse" />
-          <span className="font-mono text-xs tracking-widest text-[#888888]">
-            CARGANDO ROUTINERY PRO...
-          </span>
+          <span>INICIALIZANDO ROUTINERY PRO...</span>
         </div>
       </main>
     );
@@ -175,7 +174,10 @@ export default function Home() {
       {/* Background ambient red glow */}
       <div className="absolute top-12 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#FF0000]/8 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="w-full max-w-xl flex flex-col gap-7 relative z-10">
+      <div className="w-full max-w-xl flex flex-col gap-6 relative z-10">
+        {/* Navigation Bar */}
+        <Navbar />
+
         {/* Top Bar: Date & Nothing OS branding */}
         <header className="flex items-center justify-between border-b border-[#1F1F1F] pb-4">
           <div className="flex items-center gap-2.5">
@@ -189,13 +191,14 @@ export default function Home() {
             <span className="font-mono text-[10px] text-[#FF0000] border border-[#FF0000]/30 bg-[#FF0000]/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
               ROUTINERY PRO
             </span>
-            <button
+            <motion.button
+              whileTap={tapScale}
               onClick={resetToDefaults}
               title="Restablecer rutinas de ejemplo"
               className="p-1.5 rounded-lg text-[#555555] hover:text-[#888888] hover:bg-[#141414] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-            </button>
+            </motion.button>
           </div>
         </header>
 
@@ -218,16 +221,18 @@ export default function Home() {
                   maxLength={24}
                   className="bg-[#0A0A0A] border border-[#FF0000] text-white font-ndot text-2xl px-3 py-1 rounded-lg w-full outline-none focus:ring-1 focus:ring-[#FF0000]"
                 />
-                <button
+                <motion.button
                   type="button"
+                  whileTap={tapScale}
                   onClick={handleSaveName}
                   className="p-2 rounded-lg bg-[#FF0000] text-white hover:bg-[#CC0000] transition-colors"
                 >
                   <Check className="w-4 h-4" />
-                </button>
+                </motion.button>
               </div>
             ) : (
-              <div
+              <motion.div
+                whileTap={tapScale}
                 onClick={handleStartEdit}
                 className="group flex items-center gap-2.5 cursor-pointer select-none"
               >
@@ -235,7 +240,7 @@ export default function Home() {
                   {userName}
                 </h2>
                 <Pencil className="w-4 h-4 text-[#555555] opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
+              </motion.div>
             )}
           </div>
           <p className="text-xs text-[#666666] font-sans">
@@ -286,6 +291,9 @@ export default function Home() {
           <span className="tracking-wider">NOTHING OS · ESTILO RETRO-TECH</span>
         </footer>
       </div>
+
+      {/* Habit Create / Edit Modal */}
+      <CreateEditHabitModal />
     </main>
   );
 }

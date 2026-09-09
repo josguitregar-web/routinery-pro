@@ -153,8 +153,13 @@ export interface HabitStoreState {
   logs: HabitLogEntry[];
   userName: string;
   isHydrated: boolean;
+  isModalOpen: boolean;
+  editingHabit: Habit | null;
 
   // Actions
+  openCreateModal: () => void;
+  openEditModal: (habit: Habit) => void;
+  closeModal: () => void;
   toggleHabit: (habitId: string, date?: string) => void;
   addHabit: (habit: Omit<Habit, 'id' | 'createdAt' | 'currentStreak' | 'bestStreak' | 'totalCompletions'>) => void;
   updateHabit: (id: string, updates: Partial<Habit>) => void;
@@ -176,8 +181,14 @@ export const useHabitStore = create<HabitStoreState>()(
       logs: [],
       userName: 'NOTHING USER',
       isHydrated: false,
+      isModalOpen: false,
+      editingHabit: null,
 
       setHydrated: (val: boolean) => set({ isHydrated: val }),
+
+      openCreateModal: () => set({ isModalOpen: true, editingHabit: null }),
+      openEditModal: (habit: Habit) => set({ isModalOpen: true, editingHabit: habit }),
+      closeModal: () => set({ isModalOpen: false, editingHabit: null }),
 
       setUserName: (name: string) => set({ userName: name.trim() || 'USUARIO' }),
 
