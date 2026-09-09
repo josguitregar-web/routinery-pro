@@ -54,7 +54,7 @@ export const useHabitStore = create<HabitStoreState>()(
       toggleHabit: (habitId, date = getTodayDateString()) => {
         const { logs } = get();
         const existingLogIndex = logs.findIndex(
-          (log) => log.habitId === habitId && log.completedAt === date
+          (log) => log.habitId === habitId && (log.date === date || log.completedAt === date)
         );
 
         if (existingLogIndex >= 0) {
@@ -64,6 +64,7 @@ export const useHabitStore = create<HabitStoreState>()(
           const newLog: HabitLogEntry = {
             id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
             habitId,
+            date,
             completedAt: date,
           };
           set({ logs: [...logs, newLog] });
@@ -113,7 +114,9 @@ export const useHabitStore = create<HabitStoreState>()(
 
       isHabitCompleted: (habitId, date = getTodayDateString()) => {
         const { logs } = get();
-        return logs.some((log) => log.habitId === habitId && log.completedAt === date);
+        return logs.some(
+          (log) => log.habitId === habitId && (log.date === date || log.completedAt === date)
+        );
       },
 
       getProgressForDate: (date = getTodayDateString()) => {
@@ -134,7 +137,7 @@ export const useHabitStore = create<HabitStoreState>()(
     }),
     {
       name: 'routinery-habit-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => localStorage) as any,
     }
   )
 );
