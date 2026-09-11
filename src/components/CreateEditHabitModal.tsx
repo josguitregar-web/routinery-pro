@@ -75,7 +75,6 @@ export const CreateEditHabitModal: React.FC = () => {
     },
   });
 
-  // Reacciona tanto a cambios en editingHabit como al abrir isModalOpen
   useEffect(() => {
     if (isModalOpen) {
       if (editingHabit) {
@@ -85,8 +84,8 @@ export const CreateEditHabitModal: React.FC = () => {
           moment: editingHabit.moment || 'morning',
           icon: editingHabit.icon || 'Droplets',
           targetTime: editingHabit.targetTime || '08:00',
-          targetCount: editingHabit.targetCount || 1,
-          unit: editingHabit.unit || 'vez',
+          targetCount: (editingHabit as any).targetCount || 1,
+          unit: (editingHabit as any).unit || 'vez',
         });
       } else {
         reset({
@@ -110,9 +109,9 @@ export const CreateEditHabitModal: React.FC = () => {
         moment: data.moment,
         icon: data.icon,
         targetTime: data.targetTime,
-        targetCount: Number(data.targetCount) || 1,
-        unit: data.unit.trim() || 'vez',
-      });
+        ...(data.targetCount ? { targetCount: Number(data.targetCount) } : {}),
+        ...(data.unit ? { unit: data.unit.trim() } : {}),
+      } as any);
     } else {
       addHabit({
         name: data.name.trim(),
@@ -126,7 +125,7 @@ export const CreateEditHabitModal: React.FC = () => {
         unit: data.unit.trim() || 'vez',
         reminderEnabled: false,
         order: Date.now(),
-      });
+      } as any);
     }
     closeModal();
   };
@@ -225,9 +224,9 @@ export const CreateEditHabitModal: React.FC = () => {
                   render={({ field }) => (
                     <div className="grid grid-cols-3 gap-2">
                       {[
-                        { id: 'morning', label: 'Mañana', icon: Sun },
-                        { id: 'afternoon', label: 'Tarde', icon: Sunset },
-                        { id: 'night', label: 'Noche', icon: Moon },
+                        { id: 'morning' as DayMoment, label: 'Mañana', icon: Sun },
+                        { id: 'afternoon' as DayMoment, label: 'Tarde', icon: Sunset },
+                        { id: 'night' as DayMoment, label: 'Noche', icon: Moon },
                       ].map(({ id, label, icon: Icon }) => {
                         const isSelected = field.value === id;
                         return (
