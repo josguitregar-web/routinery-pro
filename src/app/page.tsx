@@ -75,8 +75,16 @@ export default function Home() {
     () => habits.filter((h) => !h.archived && h.moment === 'afternoon').sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [habits]
   );
+  // CORRECCIÓN LÍNEA 79: Cast explícito a string para evitar TS2367
   const nightHabits = useMemo(
-    () => habits.filter((h) => !h.archived && (h.moment === 'night' || h.moment === 'evening')).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+    () =>
+      habits
+        .filter(
+          (h) =>
+            !h.archived &&
+            (h.moment === 'night' || (h.moment as string) === 'evening')
+        )
+        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [habits]
   );
 
