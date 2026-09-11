@@ -25,10 +25,11 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const habits = useHabitStore((s) => s.habits);
+  // SUSCRIPCIÓN CLAVE A LOGS PARA REACTIVIDAD EN TIEMPO REAL
+  const logs = useHabitStore((s) => s.logs);
   const userName = useHabitStore((s) => s.userName);
   const setUserName = useHabitStore((s) => s.setUserName);
   const toggleHabit = useHabitStore((s) => s.toggleHabit);
-  const isHabitCompleted = useHabitStore((s) => s.isHabitCompleted);
   const getProgressForDate = useHabitStore((s) => s.getProgressForDate);
   const resetToDefaults = useHabitStore((s) => s.resetToDefaults);
 
@@ -63,20 +64,21 @@ export default function Home() {
     return 'BUENAS NOCHES';
   }, []);
 
+  // Cálculo de progreso reactivo a los cambios en 'logs'
   const progress = useMemo(() => {
     return getProgressForDate(todayStr);
-  }, [getProgressForDate, todayStr, habits]);
+  }, [getProgressForDate, todayStr, habits, logs]);
 
   const morningHabits = useMemo(
-    () => habits.filter((h) => !h.archived && h.moment === 'morning').sort((a, b) => a.order - b.order),
+    () => habits.filter((h) => !h.archived && h.moment === 'morning').sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [habits]
   );
   const afternoonHabits = useMemo(
-    () => habits.filter((h) => !h.archived && h.moment === 'afternoon').sort((a, b) => a.order - b.order),
+    () => habits.filter((h) => !h.archived && h.moment === 'afternoon').sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [habits]
   );
   const nightHabits = useMemo(
-    () => habits.filter((h) => !h.archived && h.moment === 'night').sort((a, b) => a.order - b.order),
+    () => habits.filter((h) => !h.archived && (h.moment === 'night' || h.moment === 'evening')).sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
     [habits]
   );
 
@@ -107,7 +109,10 @@ export default function Home() {
     timeRange: string,
     sectionHabits: typeof habits
   ) => {
-    const completedCount = sectionHabits.filter((h) => isHabitCompleted(h.id, todayStr)).length;
+    // Verificación reactiva de tareas completadas leyendo los 'logs'
+    const completedCount = sectionHabits.filter((h) =>
+      logs.some((log) => log.habitId === h.id && log.date === todayStr)
+    ).length;
     const isAllDone = sectionHabits.length > 0 && completedCount === sectionHabits.length;
 
     return (
@@ -139,14 +144,21 @@ export default function Home() {
         <div className="flex flex-col gap-2.5">
           <AnimatePresence mode="popLayout">
             {sectionHabits.length > 0 ? (
-              sectionHabits.map((habit) => (
-                <HabitRow
-                  key={habit.id}
-                  habit={habit}
-                  isCompleted={isHabitCompleted(habit.id, todayStr)}
-                  onToggle={() => toggleHabit(habit.id, todayStr)}
-                />
-              ))
+              sectionHabits.map((habit) => {
+                // Estado completado reactivo
+                const isCompleted = logs.some(
+                  (log) => log.habitId === habit.id && log.date === todayStr
+                );
+
+                return (
+                  <HabitRow
+                    key={habit.id}
+                    habit={habit}
+                    isCompleted={isCompleted}
+                    onToggle={() => toggleHabit(habit.id, todayStr)}
+                  />
+                );
+              })
             ) : (
               <div className="p-4 rounded-xl border border-dashed border-[#1A1A1A] text-center text-xs font-mono text-[#555555]">
                 SIN RUTINAS ASIGNADAS
