@@ -16,7 +16,7 @@ import { HabitRow } from '@/components/HabitRow';
 import { Navbar } from '@/components/Navbar';
 import { CreateEditHabitModal } from '@/components/CreateEditHabitModal';
 import { DayMoment } from '@/types/habit';
-import { tapScale, snappySpring } from '@/lib/animations';
+import { tapScale } from '@/lib/animations';
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
@@ -25,13 +25,12 @@ export default function Home() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const habits = useHabitStore((s) => s.habits);
-  // SUSCRIPCIÓN CLAVE A LOGS PARA REACTIVIDAD EN TIEMPO REAL
   const logs = useHabitStore((s) => s.logs);
   const userName = useHabitStore((s) => s.userName);
   const setUserName = useHabitStore((s) => s.setUserName);
   const toggleHabit = useHabitStore((s) => s.toggleHabit);
   const getProgressForDate = useHabitStore((s) => s.getProgressForDate);
-  const resetToDefaults = useHabitStore((s) => s.resetToDefaults);
+  const resetTodayLogs = useHabitStore((s) => s.resetTodayLogs);
 
   useEffect(() => {
     setMounted(true);
@@ -64,7 +63,6 @@ export default function Home() {
     return 'BUENAS NOCHES';
   }, []);
 
-  // Cálculo de progreso reactivo a los cambios en 'logs'
   const progress = useMemo(() => {
     return getProgressForDate(todayStr);
   }, [getProgressForDate, todayStr, habits, logs]);
@@ -109,7 +107,6 @@ export default function Home() {
     timeRange: string,
     sectionHabits: typeof habits
   ) => {
-    // Verificación reactiva de tareas completadas leyendo los 'logs'
     const completedCount = sectionHabits.filter((h) =>
       logs.some((log) => log.habitId === h.id && log.date === todayStr)
     ).length;
@@ -145,7 +142,6 @@ export default function Home() {
           <AnimatePresence mode="popLayout">
             {sectionHabits.length > 0 ? (
               sectionHabits.map((habit) => {
-                // Estado completado reactivo
                 const isCompleted = logs.some(
                   (log) => log.habitId === habit.id && log.date === todayStr
                 );
@@ -205,8 +201,8 @@ export default function Home() {
             </span>
             <motion.button
               whileTap={tapScale}
-              onClick={resetToDefaults}
-              title="Restablecer rutinas de ejemplo"
+              onClick={resetTodayLogs}
+              title="Desmarcar rutinas de hoy"
               className="p-1.5 rounded-lg text-[#555555] hover:text-[#888888] hover:bg-[#141414] transition-colors"
             >
               <RotateCcw className="w-3.5 h-3.5" />
