@@ -31,13 +31,12 @@ export interface HabitStoreState {
   setUserName: (name: string) => void;
   resetToDefaults: () => void;
 
-  // Selectors & Computations
+  // Selectors
   isHabitCompleted: (habitId: string, date?: string) => boolean;
   getProgressForDate: (date?: string) => { completed: number; total: number; percentage: number };
   getHabitsByMoment: (moment: DayMoment) => Habit[];
 }
 
-// Wrapper seguro para evitar crashes de hidratación en SSR / Next.js / Vercel
 const safeLocalStorage = {
   getItem: (name: string) => {
     if (typeof window === 'undefined') return null;
@@ -65,9 +64,16 @@ export const useHabitStore = create<HabitStoreState>()(
       isEditModalOpen: false,
       editingHabit: null,
 
-      openCreateModal: () => set({ isModalOpen: true }),
-      openEditModal: (habit) => set({ isEditModalOpen: true, editingHabit: habit }),
-      closeModal: () => set({ isModalOpen: false, isEditModalOpen: false, editingHabit: null }),
+      // SOLUCIÓN 1: Al crear, forzamos editingHabit = null
+      openCreateModal: () =>
+        set({ isModalOpen: true, isEditModalOpen: false, editingHabit: null }),
+
+      // SOLUCIÓN 2: Al editar, activamos isModalOpen = true para que la UI responda
+      openEditModal: (habit) =>
+        set({ isModalOpen: true, isEditModalOpen: true, editingHabit: habit }),
+
+      closeModal: () =>
+        set({ isModalOpen: false, isEditModalOpen: false, editingHabit: null }),
 
       toggleHabit: (habitId, targetDate) => {
         const date = targetDate || getTodayDateString();
@@ -90,7 +96,6 @@ export const useHabitStore = create<HabitStoreState>()(
           updatedLogs = [...logs, newLog];
         }
 
-        // Recalcular métricas de totales en tiempo real
         const updatedHabits = habits.map((habit) => {
           if (habit.id !== habitId) return habit;
           const habitLogs = updatedLogs.filter((l) => l.habitId === habitId);
@@ -119,6 +124,8 @@ export const useHabitStore = create<HabitStoreState>()(
         set((state) => ({
           habits: [...state.habits, newHabit],
           isModalOpen: false,
+          isEditModalOpen: false,
+          editingHabit: null,
         }));
       },
 
@@ -127,6 +134,7 @@ export const useHabitStore = create<HabitStoreState>()(
           habits: state.habits.map((habit) =>
             habit.id === id ? { ...habit, ...updates } : habit
           ),
+          isModalOpen: false,
           isEditModalOpen: false,
           editingHabit: null,
         }));
