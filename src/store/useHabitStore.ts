@@ -37,12 +37,30 @@ export interface HabitStoreState {
   getHabitsByMoment: (moment: DayMoment) => Habit[];
 }
 
+// Wrapper seguro para evitar crashes de hidratación en SSR / Next.js / Vercel
+const safeLocalStorage = {
+  getItem: (name: string) => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(name);
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: (name: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(name);
+    }
+  },
+};
+
 export const useHabitStore = create<HabitStoreState>()(
   persist(
     (set, get) => ({
       habits: DEFAULT_HABITS,
       logs: [],
-      userName: 'Your Name',
+      userName: 'Usuario',
       isModalOpen: false,
       isEditModalOpen: false,
       editingHabit: null,
@@ -51,30 +69,47 @@ export const useHabitStore = create<HabitStoreState>()(
       openEditModal: (habit) => set({ isEditModalOpen: true, editingHabit: habit }),
       closeModal: () => set({ isModalOpen: false, isEditModalOpen: false, editingHabit: null }),
 
-      toggleHabit: (habitId, date = getTodayDateString()) => {
-        const { logs } = get();
+      toggleHabit: (habitId, targetDate) => {
+        const date = targetDate || getTodayDateString();
+        const { logs, habits } = get();
+
         const existingLogIndex = logs.findIndex(
-          (log) => log.habitId === habitId && (log.date === date || log.completedAt === date)
+          (log) => log.habitId === habitId && log.date === date
         );
 
+        let updatedLogs: HabitLogEntry[];
         if (existingLogIndex >= 0) {
-          const newLogs = logs.filter((_, index) => index !== existingLogIndex);
-          set({ logs: newLogs });
+          updatedLogs = logs.filter((_, index) => index !== existingLogIndex);
         } else {
           const newLog: HabitLogEntry = {
-            id: `log-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
             habitId,
             date,
-            completedAt: date,
+            completedAt: new Date().toISOString(),
           };
-          set({ logs: [...logs, newLog] });
+          updatedLogs = [...logs, newLog];
         }
+
+        // Recalcular métricas de totales en tiempo real
+        const updatedHabits = habits.map((habit) => {
+          if (habit.id !== habitId) return habit;
+          const habitLogs = updatedLogs.filter((l) => l.habitId === habitId);
+          return {
+            ...habit,
+            totalCompletions: habitLogs.length,
+          };
+        });
+
+        set({
+          logs: updatedLogs,
+          habits: updatedHabits,
+        });
       },
 
       addHabit: (habitData) => {
         const newHabit: Habit = {
           ...habitData,
-          id: `habit-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `habit-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
           createdAt: getTodayDateString(),
           currentStreak: 0,
           bestStreak: 0,
@@ -108,23 +143,26 @@ export const useHabitStore = create<HabitStoreState>()(
 
       resetToDefaults: () => {
         set({
+          habits: DEFAULT_HABITS,
           logs: [],
         });
       },
 
-      isHabitCompleted: (habitId, date = getTodayDateString()) => {
+      isHabitCompleted: (habitId, targetDate) => {
+        const date = targetDate || getTodayDateString();
         const { logs } = get();
-        return logs.some(
-          (log) => log.habitId === habitId && (log.date === date || log.completedAt === date)
-        );
+        return logs.some((log) => log.habitId === habitId && log.date === date);
       },
 
-      getProgressForDate: (date = getTodayDateString()) => {
-        const { habits, isHabitCompleted } = get();
+      getProgressForDate: (targetDate) => {
+        const date = targetDate || getTodayDateString();
+        const { habits, logs } = get();
         if (habits.length === 0) {
           return { completed: 0, total: 0, percentage: 0 };
         }
-        const completed = habits.filter((h) => isHabitCompleted(h.id, date)).length;
+        const completed = habits.filter((h) =>
+          logs.some((log) => log.habitId === h.id && log.date === date)
+        ).length;
         const total = habits.length;
         const percentage = Math.round((completed / total) * 100);
         return { completed, total, percentage };
@@ -137,7 +175,7 @@ export const useHabitStore = create<HabitStoreState>()(
     }),
     {
       name: 'routinery-habit-storage',
-      storage: createJSONStorage(() => localStorage) as any,
+      storage: createJSONStorage(() => safeLocalStorage),
     }
   )
 );
