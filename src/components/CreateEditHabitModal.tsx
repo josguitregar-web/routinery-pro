@@ -75,29 +75,32 @@ export const CreateEditHabitModal: React.FC = () => {
     },
   });
 
+  // Reacciona tanto a cambios en editingHabit como al abrir isModalOpen
   useEffect(() => {
-    if (editingHabit) {
-      reset({
-        name: editingHabit.name,
-        description: editingHabit.description || '',
-        moment: editingHabit.moment,
-        icon: editingHabit.icon,
-        targetTime: editingHabit.targetTime || '08:00',
-        targetCount: editingHabit.targetCount || 1,
-        unit: editingHabit.unit || 'vez',
-      });
-    } else {
-      reset({
-        name: '',
-        description: '',
-        moment: 'morning',
-        icon: 'Droplets',
-        targetTime: '08:00',
-        targetCount: 1,
-        unit: 'vez',
-      });
+    if (isModalOpen) {
+      if (editingHabit) {
+        reset({
+          name: editingHabit.name || '',
+          description: editingHabit.description || '',
+          moment: editingHabit.moment || 'morning',
+          icon: editingHabit.icon || 'Droplets',
+          targetTime: editingHabit.targetTime || '08:00',
+          targetCount: editingHabit.targetCount || 1,
+          unit: editingHabit.unit || 'vez',
+        });
+      } else {
+        reset({
+          name: '',
+          description: '',
+          moment: 'morning',
+          icon: 'Droplets',
+          targetTime: '08:00',
+          targetCount: 1,
+          unit: 'vez',
+        });
+      }
     }
-  }, [editingHabit, reset]);
+  }, [editingHabit, isModalOpen, reset]);
 
   const onSubmit = (data: FormValues) => {
     if (editingHabit) {
@@ -129,7 +132,7 @@ export const CreateEditHabitModal: React.FC = () => {
   };
 
   const handleDelete = () => {
-    if (editingHabit && confirm(`¿Eliminar permanentemente "${editingHabit.name}"?`)) {
+    if (editingHabit) {
       deleteHabit(editingHabit.id);
       closeModal();
     }
@@ -166,6 +169,7 @@ export const CreateEditHabitModal: React.FC = () => {
                 </h3>
               </div>
               <motion.button
+                type="button"
                 whileTap={tapScale}
                 onClick={closeModal}
                 className="p-1 rounded-lg text-[#666666] hover:text-white hover:bg-[#141414] transition-colors"
